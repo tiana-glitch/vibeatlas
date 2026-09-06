@@ -1,3 +1,11 @@
+---
+title: VibeAtlas
+sdk: docker
+app_port: 7860
+colorFrom: blue
+colorTo: green
+---
+
 # NoteFlow：多模态笔记知识库整理多 Agent 系统
 
 > **公开演示说明**：仓库中的 `demo_vault/` 是完全合成的数据集；个人 Obsidian

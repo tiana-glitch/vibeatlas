@@ -25,6 +25,20 @@
 python3 server.py --host 0.0.0.0 --port $PORT --vault-root demo_vault
 ```
 
+## Hugging Face Spaces（免信用卡备选）
+
+本仓库同时包含 `Dockerfile`，可作为公开 Docker Space 的构建入口：
+
+1. 在 Hugging Face 创建一个 **Docker Space**，可见性选择 Public。
+2. 将本仓库内容上传到 Space，或按 Hugging Face 提供的 Git 地址推送。
+3. Space 会监听 7860 端口；启动命令自动使用 `demo_vault` 合成知识库。
+4. 等待构建完成后，用 `https://<用户名>-<space名>.hf.space/` 验证工作台，
+   `/graph.html` 验证知识图谱，`/api/health` 验证服务健康状态。
+
+免费硬件通常无需信用卡，但平台可能要求单独的账号验证。公开 Space 只用于面试演示：
+当前 API 没有登录、鉴权或限流，写入内容保存在临时磁盘，重启后可能丢失；不要放入真实
+个人知识库、附件或任何 API 密钥。
+
 `--vault-root` 将 API 的知识库读写根目录与静态页面目录分离。静态页面仍从
 仓库根目录加载，API 只读取/写入 `demo_vault/`；demo vault 目录也不会被静态
 文件服务直接暴露。
