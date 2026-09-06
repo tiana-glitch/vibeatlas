@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: vibeatlas-demo
+    runtime: python
+    plan: free
+    buildCommand: "python3 -m py_compile server.py note_knowledge/*.py career_copilot/*.py"
+    startCommand: "python3 server.py --host 0.0.0.0 --port $PORT --vault-root demo_vault"
+    healthCheckPath: /api/health
+    autoDeploy: true
+
+# This blueprint is for the synthetic demo only. Do not point --vault-root at
+# a personal Obsidian vault or add credentials to this repository.

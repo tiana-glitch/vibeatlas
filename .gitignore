@@ -1,0 +1,33 @@
+__pycache__/
+*.py[cod]
+.DS_Store
+northstar-decision-brief.md
+.note_runs/
+.note_runtime/
+.obsidian/
+.agents/*
+!.agents/skills/
+!.agents/skills/ai-pm-knowledge-vault/
+!.agents/skills/ai-pm-knowledge-vault/**
+.trash/
+
+# The local Obsidian vault is intentionally excluded from the public repo.
+# Only the synthetic demo dataset under demo_vault/ is publishable.
+/00-收件箱/
+/00-知识库说明.md
+/01-知识库目录.md
+/01-工作经历/
+/02-更新流水账.md
+/02-项目案例/
+/03-AI产品能力/
+/04-经验与方法/
+/05-求职材料/
+/06-成果与证据/
+/07-素材附件/
+/08-知识点/
+/99-模板/
+
+# Local/editor/runtime output
+.coverage
+htmlcov/
+coverage.xml

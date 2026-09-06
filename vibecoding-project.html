@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#111516" />
+    <meta name="description" content="VibeAtlas：面向 AI 产品经理的证据驱动个人知识操作系统项目展示。" />
+    <title>VibeAtlas · AI PM 证据驱动知识操作系统</title>
+    <link rel="stylesheet" href="vibecoding-project.css?v=20260906-1" />
+    <script defer src="vendor/lucide.0.468.0.min.js"></script>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="site-header">
+        <a class="brand" href="vibecoding-project.html" aria-label="VibeAtlas 项目首页">
+          <span class="brand-mark"><i data-lucide="sparkles" aria-hidden="true"></i></span>
+          <span><strong>VibeAtlas</strong><small>AI PM Knowledge OS</small></span>
+        </a>
+        <nav class="site-nav" aria-label="项目导航">
+          <a href="#overview">Overview</a>
+          <a href="#system">System</a>
+          <a href="#resume">Resume</a>
+          <a class="nav-cta" href="graph.html"><i data-lucide="network" aria-hidden="true"></i><span>打开知识图谱</span></a>
+        </nav>
+      </header>
+
+      <main>
+        <section class="hero" id="overview">
+          <div class="hero-copy">
+            <p class="eyebrow"><span class="status-pulse"></span> VIBECODING PROJECT · 2026</p>
+            <h1>VibeAtlas</h1>
+            <p class="hero-title">把碎片信息，变成可追溯的 AI 产品知识资产。</p>
+            <p class="hero-lede">一个面向 AI 产品经理的本地优先知识操作系统：从截图、会议记录和文档出发，经过 OCR、人工校正、知识点提炼与审核，最终沉淀为可被 Obsidian 直接打开的证据网络。</p>
+            <div class="hero-actions">
+              <a class="button button-primary" href="graph.html"><i data-lucide="orbit" aria-hidden="true"></i><span>查看知识图谱</span></a>
+              <a class="button button-secondary" href="index.html"><i data-lucide="scan-text" aria-hidden="true"></i><span>体验笔记整理</span></a>
+            </div>
+            <p class="hero-note">Local-first · Obsidian-native · Evidence-grounded</p>
+          </div>
+          <div class="hero-visual" aria-label="知识点关系网络示意图" role="img">
+            <div class="visual-caption"><span>LIVE MODEL</span><strong>knowledge-point graph</strong></div>
+            <div class="network-canvas">
+              <span class="network-line line-a"></span><span class="network-line line-b"></span><span class="network-line line-c"></span>
+              <span class="network-line line-d"></span><span class="network-line line-e"></span><span class="network-line line-f"></span>
+              <span class="network-node node-a"><b>method</b></span>
+              <span class="network-node node-b"><b>evidence</b></span>
+              <span class="network-node node-c"><b>decision</b></span>
+              <span class="network-node node-d"><b>lesson</b></span>
+              <span class="network-node node-e"><b>claim</b></span>
+              <span class="network-node node-f"><b>source</b></span>
+            </div>
+            <div class="visual-footer"><span>11 knowledge points</span><span>12 relations</span><span>0 orphan edges</span></div>
+          </div>
+        </section>
+
+        <section class="metric-band" aria-label="项目指标">
+          <div><strong>41</strong><span>受管 Markdown 笔记</span></div>
+          <div><strong>79</strong><span>回归测试通过</span></div>
+          <div><strong>3</strong><span>核心工作流</span></div>
+          <div><strong>0</strong><span>知识库校验问题</span></div>
+        </section>
+
+        <section class="content-section split-section">
+          <div class="section-intro">
+            <p class="eyebrow">01 · WHY</p>
+            <h2>不是把笔记堆起来，<br />而是保住下一次决策的证据。</h2>
+          </div>
+          <div class="section-body">
+            <p>工作经验分散在截图、聊天、会议记录和项目文档里。真正困难的不是“存进去”，而是下次复盘时能找到原文、还原自己的判断，并把它写成可信的简历素材。</p>
+            <div class="principles">
+              <div class="principle"><span class="principle-index">A</span><div><strong>原始证据不被覆盖</strong><p>OCR 错误可以修订，但原始识别文本和原始附件永久保留。</p></div></div>
+              <div class="principle"><span class="principle-index">B</span><div><strong>知识点才是图谱节点</strong><p>来源文档负责追溯，真正连接的是可复用的结论、方法和决策。</p></div></div>
+              <div class="principle"><span class="principle-index">C</span><div><strong>收录必须闭环</strong><p>每次材料进入系统，都同步完成笔记、目录和流水账。</p></div></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="content-section" id="system">
+          <div class="section-heading">
+            <div><p class="eyebrow">02 · SYSTEM</p><h2>一条可检查的知识生产线</h2></div>
+            <p>把“想整理”变成可以审核、回滚和复用的本地事务。</p>
+          </div>
+          <div class="flow-grid">
+            <article class="flow-step flow-step-mint"><span class="step-number">01</span><i data-lucide="image" aria-hidden="true"></i><h3>Capture</h3><p>截图、文字、关键词或一份文档进入收件口。</p><span class="step-tag">OCR / import</span></article>
+            <article class="flow-step flow-step-blue"><span class="step-number">02</span><i data-lucide="scan-search" aria-hidden="true"></i><h3>Clarify</h3><p>识别低置信度片段，人工修订后重新运行下游流程。</p><span class="step-tag">human-in-the-loop</span></article>
+            <article class="flow-step flow-step-amber"><span class="step-number">03</span><i data-lucide="split" aria-hidden="true"></i><h3>Atomize</h3><p>把文档拆成可独立检索、连接和引用的知识点。</p><span class="step-tag">knowledge points</span></article>
+            <article class="flow-step flow-step-coral"><span class="step-number">04</span><i data-lucide="shield-check" aria-hidden="true"></i><h3>Verify</h3><p>预览、确认、归档或恢复；每次变更都有可追踪记录。</p><span class="step-tag">recoverable transaction</span></article>
+          </div>
+        </section>
+
+        <section class="content-section architecture-section">
+          <div class="section-heading">
+            <div><p class="eyebrow">03 · ARCHITECTURE</p><h2>三层结构，两个入口，一份长期资产</h2></div>
+          </div>
+          <div class="architecture-grid">
+            <div class="architecture-map" aria-label="系统架构图" role="img">
+              <div class="architecture-layer layer-input"><span>INPUT</span><strong>截图 · 文本 · 文档</strong></div>
+              <div class="architecture-connector"></div>
+              <div class="architecture-layer layer-process"><span>PROCESS</span><strong>NoteOrchestrator<br />+ Agent Skill</strong></div>
+              <div class="architecture-connector"></div>
+              <div class="architecture-layer layer-asset"><span>ASSET</span><strong>Obsidian Vault<br />+ Knowledge Graph</strong></div>
+            </div>
+            <div class="architecture-copy">
+              <div><span class="copy-label">RULE LAYER</span><p>本地 `ai-pm-knowledge-vault` skill 约束无路径双链、唯一文件名和三文件收录事务。</p></div>
+              <div><span class="copy-label">WORKFLOW LAYER</span><p>Python 标准库服务承载 OCR、分类、摘要、导入、归档和冲突检测。</p></div>
+              <div><span class="copy-label">KNOWLEDGE LAYER</span><p>Markdown 是长期资产，图谱只是知识点关系的可视投影，不锁定在某个 UI 里。</p></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="content-section result-section">
+          <div class="section-heading">
+            <div><p class="eyebrow">04 · PROOF</p><h2>可验证的结果，而不是概念演示</h2></div>
+            <p>数字来自当前本地项目状态；业务效率指标仍待真实工作材料验证。</p>
+          </div>
+          <div class="proof-grid">
+            <div class="proof-item"><strong>11</strong><span>首份真实需求文档拆出的知识点</span><small>每个点保留来源章节与原文片段</small></div>
+            <div class="proof-item"><strong>12</strong><span>知识点关系</span><small>默认图谱不渲染来源、目录或分类节点</small></div>
+            <div class="proof-item"><strong>100%</strong><span>原始附件字节保真</span><small>归档/恢复不破坏证据文件</small></div>
+            <div class="proof-item"><strong>2-way</strong><span>来源生命周期</span><small>归档隐藏，恢复可见，不做不可逆删除</small></div>
+          </div>
+        </section>
+
+        <section class="resume-section" id="resume">
+          <div class="resume-heading"><p class="eyebrow">05 · RESUME READY</p><h2>简历里可以这样写</h2></div>
+          <div class="resume-copy">
+            <p class="resume-project-name">VibeAtlas｜AI PM 证据驱动知识操作系统</p>
+            <p class="resume-summary">面向 AI 产品经理工作复盘与求职场景，基于 Obsidian、Python 和项目本地 Agent Skill 构建本地优先知识系统；将截图、会议记录和文档拆解为可追溯知识点，建立 OCR 人工校正、审核式收录、可恢复来源生命周期与知识点关系图谱。</p>
+            <ul class="resume-bullets">
+              <li>设计“笔记 + 目录 + 流水账”三文件收录事务，强制原始证据保留并通过自动校验保障长期可维护性。</li>
+              <li>实现多模态笔记整理和知识点图谱，支持 OCR revision 冲突保护、来源归档/恢复、稳定类型配色和响应式交互。</li>
+              <li>以真实文档验证：拆出 11 个知识点、建立 12 条关联；最终 79 项回归测试通过，知识库校验 0 个问题。</li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="launch-section" aria-labelledby="launchTitle">
+          <div><p class="eyebrow">TRY THE ARTIFACT</p><h2 id="launchTitle">从展示页，直接进入产品现场。</h2></div>
+          <div class="launch-links">
+            <a href="graph.html"><i data-lucide="network" aria-hidden="true"></i><span><strong>知识图谱</strong><small>查看知识点关系与来源树</small></span><i data-lucide="arrow-up-right" aria-hidden="true"></i></a>
+            <a href="index.html"><i data-lucide="scan-text" aria-hidden="true"></i><span><strong>笔记整理台</strong><small>体验 OCR、修订与归档流程</small></span><i data-lucide="arrow-up-right" aria-hidden="true"></i></a>
+            <a href="inbox.html"><i data-lucide="inbox" aria-hidden="true"></i><span><strong>收件箱整理</strong><small>审核新建知识点或追加已有笔记</small></span><i data-lucide="arrow-up-right" aria-hidden="true"></i></a>
+          </div>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <span>VibeAtlas · built with Vibe Coding</span>
+        <span>Local artifact · Obsidian-ready · Evidence-grounded</span>
+      </footer>
+    </div>
+    <script>
+      window.addEventListener("DOMContentLoaded", () => window.lucide?.createIcons({ attrs: { width: 17, height: 17, "stroke-width": 1.8 } }));
+    </script>
+  </body>
+</html>

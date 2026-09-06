@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f4f7f5" />
+    <title>NoteFlow · 多模态笔记整理</title>
+    <link rel="stylesheet" href="styles.css?v=20260906-ocr-review" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="/" aria-label="NoteFlow 首页">
+          <span class="brand-mark">N</span>
+          <span><strong>NoteFlow</strong><small>知识库整理台</small></span>
+        </a>
+        <nav class="side-nav" aria-label="主导航">
+          <a class="nav-item active" href="#workspace"><span class="nav-icon">+</span>新建整理</a>
+          <a class="nav-item" href="#results"><span class="nav-icon">□</span>处理结果</a>
+          <a class="nav-item" href="#pipeline"><span class="nav-icon">≡</span>流水线</a>
+          <a class="nav-item" href="/graph.html"><span class="nav-icon"><i data-lucide="network" aria-hidden="true"></i></span>知识图谱</a>
+          <a class="nav-item" href="/inbox.html"><span class="nav-icon"><i data-lucide="inbox" aria-hidden="true"></i></span>收件箱整理</a>
+        </nav>
+        <div class="sidebar-foot">
+          <span class="status-dot"></span>
+          <span><strong>本地模式</strong><small>无需 API Key 即可演示</small></span>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">MULTIMODAL NOTE WORKSPACE</p>
+            <h1>把杂乱笔记，整理成可检索知识</h1>
+          </div>
+          <div class="topbar-meta"><span id="connectionBadge" class="badge">就绪</span><span id="runIdLabel">尚未开始</span></div>
+        </header>
+
+        <section class="workspace-grid" id="workspace">
+          <section class="input-column">
+            <div class="panel input-panel">
+              <div class="panel-heading"><div><span class="eyebrow">01 · INPUT</span><h2>添加一份笔记</h2></div><span class="muted" id="imageMeta">未选择图片</span></div>
+              <div class="field-group keyword-group">
+                <div class="field-label-row"><label for="keywordsInput">检索关键词 <span>可选 · 只填关键词也能生成笔记</span></label><span class="keyword-hint">最多 8 个</span></div>
+                <textarea id="keywordsInput" rows="2" placeholder="例如：LangGraph、StateGraph、Agent 工作流"></textarea>
+              </div>
+              <label class="dropzone" id="dropzone" for="imageInput" tabindex="0" aria-label="选择、拖入或粘贴笔记截图">
+                <input id="imageInput" type="file" accept="image/*" />
+                <span class="upload-icon">↑</span>
+                <strong id="uploadTitle">选择、拖入或粘贴截图</strong>
+                <span id="uploadHint">支持 PNG、JPG、WEBP · <kbd id="pasteShortcut">⌘V</kbd> 粘贴</span>
+                <img id="imagePreview" alt="笔记预览" hidden />
+                <span class="paste-status" id="pasteStatus" hidden></span>
+              </label>
+              <div class="field-group">
+                <label for="userNote">简短备注 <span>可选</span></label>
+                <textarea id="userNote" rows="3" placeholder="例如：这是本周 LangGraph 学习笔记"></textarea>
+              </div>
+              <div class="field-group">
+                <div class="field-label-row"><label for="ocrText">文字回退输入 <span>可选</span></label><button class="text-button" id="sampleBtn" type="button">填入示例</button></div>
+                <textarea id="ocrText" rows="7" placeholder="没有配置多模态 API 时，可把图片文字粘贴到这里"></textarea>
+              </div>
+              <button id="processBtn" class="primary-button" type="button"><span class="button-icon">✦</span><span>开始整理</span></button>
+              <p class="privacy-note">可只提交图片或关键词；系统会保留公开来源 URL，便于回看和核验。</p>
+            </div>
+
+            <section class="panel pipeline-panel" id="pipeline">
+              <div class="panel-heading"><div><span class="eyebrow">02 · PIPELINE</span><h2>处理流水线</h2></div><span class="muted" id="progressLabel">等待输入</span></div>
+              <ol class="stage-list" id="stageList">
+                <li class="stage-item queued" data-stage="retrieve" id="retrieveStage" hidden><span class="stage-number">00</span><span class="stage-copy"><strong>关键词公开检索</strong><small>抓取带 URL 的公开资料摘要</small></span><span class="stage-status">等待</span><button class="retry-button" data-retry="retrieve" type="button" title="重试此阶段" hidden>↻</button></li>
+                <li class="stage-item queued" data-stage="ocr"><span class="stage-number">01</span><span class="stage-copy"><strong>OCR & 内容提取</strong><small>过滤水印、边框和无关文字</small></span><span class="stage-status">等待</span><button class="retry-button" data-retry="ocr" type="button" title="重试此阶段" hidden>↻</button></li>
+                <li class="stage-item queued" data-stage="classify"><span class="stage-number">02</span><span class="stage-copy"><strong>主题归类打标</strong><small>统一一级分类与二级标签</small></span><span class="stage-status">等待</span><button class="retry-button" data-retry="classify" type="button" title="重试此阶段" hidden>↻</button></li>
+                <li class="stage-item queued" data-stage="summarize"><span class="stage-number">03</span><span class="stage-copy"><strong>信息压缩去重</strong><small>保留事实、合并重复片段</small></span><span class="stage-status">等待</span><button class="retry-button" data-retry="summarize" type="button" title="重试此阶段" hidden>↻</button></li>
+                <li class="stage-item queued" data-stage="archive"><span class="stage-number">04</span><span class="stage-copy"><strong>生成归档草稿</strong><small>生成待确认的 Markdown 笔记</small></span><span class="stage-status">等待</span><button class="retry-button" data-retry="archive" type="button" title="重试此阶段" hidden>↻</button></li>
+              </ol>
+            </section>
+          </section>
+
+          <section class="result-column" id="results">
+            <div class="panel result-panel">
+              <div class="panel-heading result-heading"><div><span class="eyebrow">03 · RESULT</span><h2>整理结果</h2></div><div class="result-actions"><button id="saveProposalBtn" class="secondary-button" type="button" disabled><i data-lucide="file-check-2" aria-hidden="true"></i><span>生成保存提案</span></button><button id="downloadBtn" class="secondary-button" type="button" disabled><i data-lucide="download" aria-hidden="true"></i><span>下载 Markdown</span></button></div></div>
+              <div id="emptyState" class="empty-state"><div class="empty-mark">✦</div><strong>完成一次整理后，结果会显示在这里</strong><span>检索来源、OCR、标签、精简要点和归档文档会保留在同一份运行记录中。</span></div>
+              <div id="resultContent" hidden>
+                <section class="note-proposal" id="noteProposalPanel" hidden aria-labelledby="noteProposalTitle">
+                  <div class="note-proposal-heading"><div><span class="eyebrow">SAVE PROPOSAL</span><h3 id="noteProposalTitle">写入收件箱</h3></div><span class="proposal-status" id="noteProposalStatus">待确认</span></div>
+                  <p class="note-proposal-meta" id="noteProposalMeta">预览不会修改知识库。</p>
+                  <pre class="proposal-preview" id="noteProposalPreview"></pre>
+                  <div class="note-proposal-actions"><button id="noteProposalCancel" class="text-button" type="button">关闭提案</button><button id="noteProposalCommit" class="primary-button proposal-commit-button" type="button"><i data-lucide="save" aria-hidden="true"></i><span>确认写入收件箱</span></button></div>
+                </section>
+                <div class="summary-strip">
+                  <div><span>资料类型</span><strong id="textType">-</strong></div>
+                  <div><span>一级分类</span><strong id="category">-</strong></div>
+                  <div><span>处理进度</span><strong id="resultProgress">0%</strong></div>
+                </div>
+                <div class="tabs" role="tablist">
+                  <button class="tab active" data-tab="archive" type="button" role="tab">归档 Markdown</button>
+                  <button class="tab" data-tab="ocr" type="button" role="tab">OCR 文本</button>
+                  <button class="tab" data-tab="classify" type="button" role="tab">标签结果</button>
+                  <button class="tab" data-tab="summarize" type="button" role="tab">精简要点</button>
+                  <button class="tab" data-tab="retrieve" type="button" role="tab">检索来源</button>
+                </div>
+                <div class="tab-panel active" data-panel="archive"><pre class="markdown-preview" id="markdownPreview"></pre></div>
+                <div class="tab-panel" data-panel="ocr">
+                  <div class="result-block ocr-review-block">
+                    <div class="block-meta"><span>原始 OCR（只读）</span><span id="ocrEngineLabel"></span></div>
+                    <pre id="ocrPreview" class="ocr-original-preview"></pre>
+                    <div class="ocr-editor-heading"><label for="ocrCorrectedText">人工校正文本</label><span id="ocrRevisionLabel">未提交校正</span></div>
+                    <textarea id="ocrCorrectedText" rows="10" placeholder="可直接修改识别结果；原始 OCR 会一直保留"></textarea>
+                    <div class="ocr-editor-actions"><span class="muted" id="noiseLabel"></span><button id="applyOcrCorrectionBtn" class="secondary-button" type="button" disabled><i data-lucide="refresh-cw" aria-hidden="true"></i><span>应用修订并重新整理</span></button></div>
+                    <div class="ocr-confidence-panel"><div class="block-meta"><span>低置信度片段</span><span>请优先核对</span></div><div id="lowConfidenceList" class="confidence-list"><span class="muted">未发现或未返回低置信度片段</span></div></div>
+                  </div>
+                </div>
+                <div class="tab-panel" data-panel="classify"><div class="result-block"><div class="label-line"><span>一级分类</span><strong id="categoryDetail"></strong></div><div class="label-line"><span>二级标签</span><div class="tag-list" id="tagList"></div></div><div class="label-line"><span>主题概括</span><p id="topicSummary"></p></div><div class="label-line"><span>适用场景</span><p id="usageScene"></p></div></div></div>
+                <div class="tab-panel" data-panel="summarize"><div class="result-block"><div class="block-meta"><span>精简版要点</span><span id="redundancyLabel"></span></div><pre id="summaryPreview"></pre><div class="key-sentences"><span class="block-title">重点短句</span><ul id="keySentenceList"></ul></div></div></div>
+                <div class="tab-panel" data-panel="retrieve"><div class="result-block retrieval-block"><div class="block-meta"><span>公开检索线索</span><span id="retrievalMeta"></span></div><p class="retrieval-query" id="retrievalQuery"></p><p class="retrieval-warning" id="retrievalWarning" hidden></p><div class="source-list" id="sourceList"></div><p class="muted source-empty" id="sourceEmpty" hidden>没有抓取到可引用来源，请检查网络或换一组更具体的关键词。</p></div></div>
+              </div>
+            </div>
+            <div class="panel event-panel"><div class="panel-heading"><div><span class="eyebrow">04 · TRACE</span><h2>运行记录</h2></div><span class="muted" id="eventCount">0 个事件</span></div><div id="eventList" class="event-list"><span class="muted">提交后显示每个阶段的开始、完成和失败事件。</span></div></div>
+          </section>
+        </section>
+      </main>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="vendor/lucide.0.468.0.min.js"></script>
+    <script src="app.js?v=20260906-ocr-review"></script>
+  </body>
+</html>

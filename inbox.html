@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#101412" />
+    <title>AI PM Knowledge · 收件箱整理</title>
+    <link rel="stylesheet" href="inbox.css?v=20260906-promotion" />
+  </head>
+  <body>
+    <div class="inbox-app" id="inboxApp">
+      <header class="mobile-bar">
+        <button class="icon-button" id="mobileListToggle" type="button" aria-label="打开收件箱列表" data-tooltip="收件箱">
+          <i data-lucide="panel-left" aria-hidden="true"></i>
+        </button>
+        <a class="mobile-brand" href="/inbox.html">AI PM Knowledge</a>
+        <button class="icon-button" id="mobileRefresh" type="button" aria-label="刷新收件箱" data-tooltip="刷新">
+          <i data-lucide="refresh-cw" aria-hidden="true"></i>
+        </button>
+      </header>
+
+      <aside class="inbox-sidebar" id="inboxSidebar" aria-label="收件箱笔记列表">
+        <div class="sidebar-brand">
+          <a class="brand-lockup" href="/inbox.html" aria-label="AI PM Knowledge 收件箱整理">
+            <span class="brand-mark"><i data-lucide="inbox" aria-hidden="true"></i></span>
+            <span><strong>AI PM Knowledge</strong><small>收件箱整理</small></span>
+          </a>
+          <button class="sidebar-close icon-button" id="sidebarClose" type="button" aria-label="关闭收件箱列表" data-tooltip="关闭">
+            <i data-lucide="x" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        <nav class="view-nav" aria-label="页面导航">
+          <a class="view-link" href="/">
+            <i data-lucide="scan-text" aria-hidden="true"></i>
+            <span>笔记整理</span>
+          </a>
+          <a class="view-link" href="/graph.html">
+            <i data-lucide="network" aria-hidden="true"></i>
+            <span>知识图谱</span>
+          </a>
+          <a class="view-link active" href="/inbox.html" aria-current="page">
+            <i data-lucide="inbox" aria-hidden="true"></i>
+            <span>收件箱整理</span>
+          </a>
+        </nav>
+
+        <div class="list-heading">
+          <div>
+            <span class="section-label">INBOX</span>
+            <strong>待整理笔记</strong>
+          </div>
+          <span class="list-count" id="inboxCount">0</span>
+        </div>
+        <label class="search-box" for="inboxSearch">
+          <i data-lucide="search" aria-hidden="true"></i>
+          <span class="sr-only">搜索收件箱</span>
+          <input id="inboxSearch" type="search" autocomplete="off" placeholder="搜索标题、内容或标签" />
+          <button class="search-clear" id="searchClear" type="button" aria-label="清空搜索" hidden>
+            <i data-lucide="x" aria-hidden="true"></i>
+          </button>
+        </label>
+        <div class="list-state" id="listState" role="status" aria-live="polite"></div>
+        <div class="note-list" id="inboxList" aria-live="polite"></div>
+        <footer class="sidebar-footer">
+          <span class="live-dot" aria-hidden="true"></span>
+          <span><strong id="vaultStatus">正在读取知识库</strong><small id="vaultStatusMeta">本地只读搜索</small></span>
+        </footer>
+      </aside>
+
+      <main class="inbox-main">
+        <header class="main-toolbar">
+          <div>
+            <span class="section-label">PROMOTE NOTES</span>
+            <h1>把收件箱变成可复用知识</h1>
+            <p>选择一条笔记，先预览差异，再确认写入知识库。</p>
+          </div>
+          <div class="toolbar-actions">
+            <span class="sync-label" id="syncLabel">尚未同步</span>
+            <button class="icon-button" id="refreshButton" type="button" aria-label="刷新收件箱" data-tooltip="刷新">
+              <i data-lucide="refresh-cw" aria-hidden="true"></i>
+            </button>
+          </div>
+        </header>
+
+        <section class="workspace" aria-label="收件箱整理工作区">
+          <section class="panel source-panel" aria-labelledby="sourceHeading">
+            <div class="panel-heading">
+              <div><span class="section-label">01 · SOURCE</span><h2 id="sourceHeading">当前笔记</h2></div>
+              <span class="panel-meta" id="sourceMeta">未选择</span>
+            </div>
+            <div class="empty-panel" id="sourceEmpty">
+              <i data-lucide="mouse-pointer-click" aria-hidden="true"></i>
+              <strong>从左侧选择一条收件箱笔记</strong>
+              <span>预览前不会修改任何文件。</span>
+            </div>
+            <article class="source-detail" id="sourceDetail" hidden>
+              <div class="source-title-row">
+                <div>
+                  <h3 id="sourceTitle">-</h3>
+                  <code id="sourcePath">-</code>
+                </div>
+                <span class="status-badge" id="sourceStatus">待整理</span>
+              </div>
+              <p class="source-summary" id="sourceSummary">-</p>
+              <div class="source-facts">
+                <span><i data-lucide="file-text" aria-hidden="true"></i><b id="sourceType">inbox</b></span>
+                <span><i data-lucide="clock-3" aria-hidden="true"></i><b id="sourceUpdated">-</b></span>
+              </div>
+              <details class="source-preview-details">
+                <summary>查看原笔记片段</summary>
+                <pre id="sourcePreview"></pre>
+              </details>
+            </article>
+          </section>
+
+          <section class="panel compose-panel" aria-labelledby="composeHeading">
+            <div class="panel-heading">
+              <div><span class="section-label">02 · PROPOSE</span><h2 id="composeHeading">整理方式</h2></div>
+              <span class="panel-meta">只生成提案</span>
+            </div>
+            <div class="mode-switch" role="tablist" aria-label="整理方式">
+              <button class="mode-button active" data-mode="new" type="button" role="tab" aria-selected="true">
+                <i data-lucide="file-plus-2" aria-hidden="true"></i><span>新建知识点</span>
+              </button>
+              <button class="mode-button" data-mode="append" type="button" role="tab" aria-selected="false">
+                <i data-lucide="file-diff" aria-hidden="true"></i><span>追加已有笔记</span>
+              </button>
+            </div>
+            <div class="field-group new-only" id="newFields">
+              <label for="newTitle">知识点标题 <span>可选</span></label>
+              <input id="newTitle" type="text" maxlength="120" placeholder="例如：失败反馈应先让用户知道发生了什么" />
+            </div>
+            <div class="field-group append-only" id="appendFields" hidden>
+              <label for="targetSelect">目标笔记</label>
+              <select id="targetSelect" disabled>
+                <option value="">先加载已有笔记</option>
+              </select>
+              <small class="field-help">只列出可作为追加目标的本地 Markdown 笔记。</small>
+            </div>
+            <div class="field-group">
+              <label for="statementInput">整理后的内容 <span>可编辑 · 留空则使用来源摘要</span></label>
+              <textarea id="statementInput" rows="8" placeholder="写一句可复用的结论、方法或经验；确认前都不会写入 vault。"></textarea>
+            </div>
+            <div class="compose-foot">
+              <span class="privacy-note"><i data-lucide="shield-check" aria-hidden="true"></i>本地处理，确认后才写入</span>
+              <button class="primary-button" id="proposeButton" type="button" disabled>
+                <i data-lucide="scan-search" aria-hidden="true"></i><span>生成差异预览</span>
+              </button>
+            </div>
+          </section>
+
+          <section class="panel proposal-panel" aria-labelledby="proposalHeading">
+            <div class="panel-heading">
+              <div><span class="section-label">03 · REVIEW</span><h2 id="proposalHeading">差异与确认</h2></div>
+              <span class="proposal-status" id="proposalStatus">等待提案</span>
+            </div>
+            <div class="proposal-empty" id="proposalEmpty">
+              <i data-lucide="git-compare" aria-hidden="true"></i>
+              <strong>生成提案后查看变更</strong>
+              <span>目标文件、目录和流水账都会在确认前保持不变。</span>
+            </div>
+            <div class="proposal-content" id="proposalContent" hidden>
+              <div class="proposal-summary" id="proposalSummary"></div>
+              <div class="diff-grid">
+                <section><div class="diff-heading"><span>原内容</span><small id="beforeLabel">不存在</small></div><pre id="beforeDiff"></pre></section>
+                <section><div class="diff-heading"><span>确认后</span><small id="afterLabel">待写入</small></div><pre id="afterDiff"></pre></section>
+              </div>
+              <details class="unified-details" open>
+                <summary>统一差异</summary>
+                <pre id="unifiedDiff"></pre>
+              </details>
+              <div class="conflict-note" id="conflictNote" hidden><i data-lucide="triangle-alert" aria-hidden="true"></i><span></span></div>
+              <footer class="proposal-footer">
+                <span class="proposal-hint" id="proposalHint">确认后会写入笔记、更新目录并追加一行流水账。</span>
+                <button class="primary-button commit-button" id="commitButton" type="button"><i data-lucide="check" aria-hidden="true"></i><span>确认写入</span></button>
+              </footer>
+            </div>
+          </section>
+        </section>
+      </main>
+
+      <button class="sidebar-backdrop" id="sidebarBackdrop" type="button" aria-label="关闭收件箱列表"></button>
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    </div>
+    <script src="vendor/lucide.0.468.0.min.js"></script>
+    <script src="inbox.js?v=20260906-promotion"></script>
+  </body>
+</html>

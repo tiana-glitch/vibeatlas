@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI PM Knowledge Vault"
+  short_description: "沉淀 AI PM 材料，并将文档拆成可追溯的原子知识点"
+  default_prompt: "使用 $ai-pm-knowledge-vault 将这份材料收录进我的 Obsidian 知识库；如有多个可复用观点，请拆成知识点，并完成来源、目录和单行流水账更新。"

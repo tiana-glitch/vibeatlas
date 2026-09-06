@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#101412" />
+    <title>AI PM Knowledge · 知识图谱</title>
+    <link rel="stylesheet" href="graph.css?v=20260906-visual-pass" />
+    <script defer src="vendor/d3.v7.9.0.min.js"></script>
+    <script defer src="vendor/lucide.0.468.0.min.js"></script>
+    <script defer src="graph.js?v=20260906-graph-visual-pass-2"></script>
+  </head>
+  <body>
+    <div class="graph-app" id="graphApp">
+      <header class="mobile-bar">
+        <button class="icon-button" id="treeToggle" type="button" aria-label="打开知识库目录" data-tooltip="目录">
+          <i data-lucide="panel-left" aria-hidden="true"></i>
+        </button>
+        <a class="mobile-brand" href="/graph.html">AI PM Knowledge</a>
+        <button class="icon-button" id="mobileRefresh" type="button" aria-label="刷新知识图谱" data-tooltip="刷新">
+          <i data-lucide="refresh-cw" aria-hidden="true"></i>
+        </button>
+      </header>
+
+      <aside class="vault-sidebar" id="vaultSidebar" aria-label="知识库目录">
+        <div class="sidebar-brand">
+          <a class="brand-lockup" href="/graph.html" aria-label="AI PM Knowledge 知识图谱">
+            <span class="brand-mark"><i data-lucide="brain-circuit" aria-hidden="true"></i></span>
+            <span><strong>AI PM Knowledge</strong><small>工作经验知识库</small></span>
+          </a>
+          <button class="sidebar-close icon-button" id="sidebarClose" type="button" aria-label="关闭知识库目录" data-tooltip="关闭">
+            <i data-lucide="x" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        <nav class="view-nav" aria-label="页面导航">
+          <a class="view-link" href="/">
+            <i data-lucide="inbox" aria-hidden="true"></i>
+            <span>笔记整理</span>
+          </a>
+          <a class="view-link active" href="/graph.html" aria-current="page">
+            <i data-lucide="network" aria-hidden="true"></i>
+            <span>知识图谱</span>
+          </a>
+          <a class="view-link" href="/inbox.html">
+            <i data-lucide="inbox" aria-hidden="true"></i>
+            <span>收件箱整理</span>
+          </a>
+        </nav>
+
+        <section class="ingest-panel" aria-labelledby="ingestHeading">
+          <div class="ingest-heading">
+            <span id="ingestHeading">来源文档</span>
+            <span class="format-list">MD · TXT · DOCX · PDF</span>
+          </div>
+          <button class="ingest-button" id="ingestButton" type="button">
+            <i data-lucide="file-up" aria-hidden="true"></i>
+            <span>提炼并审核</span>
+          </button>
+          <input
+            class="source-file-input"
+            id="sourceFileInput"
+            type="file"
+            accept=".md,.markdown,.txt,.docx,.pdf,text/markdown,text/plain,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          />
+          <div class="ingest-status" id="ingestStatus" data-state="idle" role="status" aria-live="polite">
+            <span class="ingest-status-icon"><i data-lucide="circle-dashed" aria-hidden="true"></i></span>
+            <span><strong id="ingestStatusTitle">等待导入</strong><small id="ingestStatusMeta">选择工作材料开始提炼</small></span>
+          </div>
+        </section>
+
+        <div class="search-box">
+          <i data-lucide="search" aria-hidden="true"></i>
+          <label class="sr-only" for="graphSearch">搜索知识点或来源</label>
+          <input id="graphSearch" type="search" placeholder="搜索知识点或来源" autocomplete="off" />
+          <button class="search-clear" id="searchClear" type="button" aria-label="清空搜索" hidden>
+            <i data-lucide="x" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        <div class="tree-heading">
+          <span>来源文档</span>
+          <span id="treeCount">0 份</span>
+        </div>
+        <nav class="vault-tree" id="vaultTree" aria-label="来源文档与知识点树">
+          <div class="tree-skeleton" aria-hidden="true">
+            <span></span><span></span><span></span><span></span>
+          </div>
+        </nav>
+
+        <footer class="sidebar-footer">
+          <span class="live-dot" aria-hidden="true"></span>
+          <span><strong id="vaultStatus">正在读取知识库</strong><small id="vaultStatusMeta">等待知识点数据</small></span>
+        </footer>
+      </aside>
+
+      <main class="graph-main">
+        <header class="graph-toolbar">
+          <div class="graph-title">
+            <span class="section-label">KNOWLEDGE POINT GRAPH</span>
+            <h1>工作知识网络</h1>
+          </div>
+
+          <div class="graph-summary" aria-label="图谱统计">
+            <span><strong id="nodeCount">0</strong> 个知识点</span>
+            <span><strong id="edgeCount">0</strong> 条关联</span>
+            <span><strong id="sourceCount">0</strong> 份来源</span>
+          </div>
+
+          <div class="graph-actions">
+            <label class="category-control" for="categoryFilter">
+              <span class="sr-only">按知识点类型筛选</span>
+              <select id="categoryFilter" aria-label="按知识点类型筛选">
+                <option value="all">全部类型</option>
+              </select>
+              <i data-lucide="chevron-down" aria-hidden="true"></i>
+            </label>
+            <div class="tool-group" aria-label="图谱视图控制">
+              <button class="icon-button" id="zoomOut" type="button" aria-label="缩小" data-tooltip="缩小">
+                <i data-lucide="zoom-out" aria-hidden="true"></i>
+              </button>
+              <button class="icon-button" id="zoomIn" type="button" aria-label="放大" data-tooltip="放大">
+                <i data-lucide="zoom-in" aria-hidden="true"></i>
+              </button>
+              <button class="icon-button" id="fitGraph" type="button" aria-label="居中显示全部节点" data-tooltip="显示全部">
+                <i data-lucide="scan" aria-hidden="true"></i>
+              </button>
+              <button class="icon-button desktop-refresh" id="refreshGraph" type="button" aria-label="刷新知识图谱" data-tooltip="刷新">
+                <i data-lucide="refresh-cw" aria-hidden="true"></i>
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <section class="graph-stage" id="graphStage" aria-label="工作经验知识点关联图谱">
+          <svg id="knowledgeGraph" role="img" aria-labelledby="graphSvgTitle graphSvgDesc">
+            <title id="graphSvgTitle">AI 产品经理工作知识网络</title>
+            <desc id="graphSvgDesc">节点代表从来源文档提取的知识点，连线代表知识点之间的关联。</desc>
+          </svg>
+          <div class="graph-state" id="graphState" role="status" aria-live="polite">
+            <span class="loading-ring" aria-hidden="true"></span>
+            <strong>正在构建知识图谱</strong>
+          </div>
+          <div class="graph-tooltip" id="graphTooltip" role="tooltip" hidden></div>
+          <div class="graph-legend" id="graphLegend" aria-label="知识点类型颜色图例"></div>
+        </section>
+      </main>
+
+      <aside class="note-inspector" id="noteInspector" aria-label="知识点详情" aria-hidden="true">
+        <header class="inspector-header">
+          <span>知识点详情</span>
+          <button class="icon-button" id="inspectorClose" type="button" aria-label="关闭知识点详情" data-tooltip="关闭">
+            <i data-lucide="x" aria-hidden="true"></i>
+          </button>
+        </header>
+        <div class="inspector-content">
+          <div class="note-category"><span id="detailDot"></span><span id="detailCategory">知识点类型</span></div>
+          <h2 id="detailTitle">选择一个知识点</h2>
+          <p class="note-summary" id="detailSummary"></p>
+
+          <dl class="note-metadata">
+            <div><dt>来源</dt><dd id="detailSource">-</dd></div>
+            <div><dt>位置</dt><dd id="detailPath">-</dd></div>
+            <div><dt>类型</dt><dd id="detailType">-</dd></div>
+            <div><dt>状态</dt><dd id="detailStatus">-</dd></div>
+            <div><dt>更新</dt><dd id="detailUpdated">-</dd></div>
+          </dl>
+
+          <section class="excerpt-section" id="excerptSection">
+            <div class="relation-heading"><h3>原文片段</h3><span id="excerptLabel">引用</span></div>
+            <blockquote id="detailExcerpt">暂无原文片段</blockquote>
+          </section>
+
+          <section class="relation-section">
+            <div class="relation-heading"><h3>关联知识点</h3><span id="relationCount">0</span></div>
+            <div class="relation-list" id="relationList"></div>
+          </section>
+        </div>
+        <a class="open-note" id="openNote" href="#" target="_blank" rel="noopener">
+          <i data-lucide="file-text" aria-hidden="true"></i>
+          <span>打开来源文档</span>
+          <i data-lucide="external-link" aria-hidden="true"></i>
+        </a>
+      </aside>
+
+      <button class="sidebar-backdrop" id="sidebarBackdrop" type="button" aria-label="关闭知识库目录"></button>
+      <section class="review-modal" id="reviewModal" hidden aria-labelledby="reviewTitle" aria-modal="true" role="dialog">
+        <div class="review-dialog">
+          <header class="review-header">
+            <div>
+              <span class="section-label">INGEST REVIEW</span>
+              <h2 id="reviewTitle">审核知识点</h2>
+              <p id="reviewSource">尚未写入知识库</p>
+            </div>
+            <button class="icon-button" id="reviewClose" type="button" aria-label="取消审核" data-tooltip="取消">
+              <i data-lucide="x" aria-hidden="true"></i>
+            </button>
+          </header>
+          <div class="review-toolbar">
+            <span id="reviewSummary">选择要收录的知识点</span>
+            <button class="review-select-all" id="reviewSelectAll" type="button">全选入图</button>
+          </div>
+          <div class="review-keywords" id="reviewKeywords" hidden>
+            <div class="review-section-heading"><h3>文档关键词</h3><span>用于搜索</span></div>
+            <div class="keyword-list" id="reviewKeywordList"></div>
+          </div>
+          <div class="review-points" id="reviewPoints"></div>
+          <footer class="review-footer">
+            <span class="review-footnote" id="reviewFootnote">至少选择一个知识点后才能收录。</span>
+            <div class="review-actions">
+              <button class="review-button secondary" id="reviewCancel" type="button">取消</button>
+              <button class="review-button primary" id="reviewCommit" type="button"><i data-lucide="check" aria-hidden="true"></i><span>确认收录</span></button>
+            </div>
+          </footer>
+        </div>
+      </section>
+      <div class="graph-toast" id="graphToast" role="status" aria-live="polite"></div>
+    </div>
+  </body>
+</html>
