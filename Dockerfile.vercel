@@ -1,0 +1,20 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PORT=80
+
+# The repository's .dockerignore keeps the personal vault and local runtime
+# state out of this public demo image.
+COPY . .
+
+RUN python3 -m py_compile server.py note_knowledge/*.py career_copilot/*.py
+
+EXPOSE 80
+
+# Vercel injects PORT when needed; 80 is the container default documented for
+# Vercel container functions.  Copy the synthetic vault to writable scratch
+# space because the image filesystem is not a durable storage layer.
+CMD ["sh", "-c", "mkdir -p /tmp/vibeatlas-demo-vault && cp -a /app/demo_vault/. /tmp/vibeatlas-demo-vault/ && exec python3 server.py --host 0.0.0.0 --port ${PORT:-80} --vault-root /tmp/vibeatlas-demo-vault"]
