@@ -438,6 +438,89 @@ summary: 把工作材料整理为可追溯的产品知识。
             self.assertIn(first_id, graph_ids)
             self.assertNotIn(second_id, graph_ids)
 
+    def test_knowledge_commit_rebuilds_a_missing_draft_from_source_payload(self):
+        """A preview and commit routed to different instances still complete."""
+
+        with TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            self.initialize_vault(root)
+            self.restart_server(root)
+            source_payload = {
+                "filename": "跨实例评审.md",
+                "mime_type": "text/markdown",
+                "extension": "md",
+                "last_modified": "",
+                "text": "跨实例提交必须能够重新构建草稿。\n\n候选知识点仍由服务端重新提炼。",
+            }
+            preview_status, preview = self.post(
+                "/api/knowledge/preview",
+                {"draft_id": "cross-instance", **source_payload},
+            )
+            self.assertEqual(preview_status, 200)
+
+            # Remove both process-local and temporary draft state to model a
+            # commit handled by a fresh serverless instance.
+            server_module.KNOWLEDGE_DRAFTS.pop("cross-instance", None)
+            server_module._knowledge_draft_path(root, "cross-instance").unlink(missing_ok=True)
+            first_id = preview["candidates"][0]["id"]
+            commit_status, result = self.post(
+                "/api/knowledge/commit",
+                {
+                    "draft_id": "cross-instance",
+                    "selected_point_ids": [first_id],
+                    "source_payload": source_payload,
+                },
+            )
+            self.assertEqual(commit_status, 201)
+            self.assertEqual(result["draft_id"], "cross-instance")
+            self.assertEqual(result["review"]["selected_count"], 1)
+            self.assertTrue((root / result["knowledge_points"][0]["path"]).is_file())
+
+    def test_source_payload_recovery_rejects_paths_unknown_fields_and_oversize(self):
+        with TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            self.initialize_vault(root)
+            self.restart_server(root)
+
+            with self.assertRaises(HTTPError) as raised:
+                self.post(
+                    "/api/knowledge/commit",
+                    {
+                        "draft_id": "unsafe-source",
+                        "selected_point_ids": ["anything"],
+                        "source_payload": {"filename": "../outside.md", "text": "不应写入库外"},
+                    },
+                )
+            self.assertEqual(raised.exception.code, 400)
+            error = json.loads(raised.exception.read().decode("utf-8"))
+            self.assertEqual(error["error"]["code"], "invalid_filename")
+
+            with self.assertRaises(HTTPError) as raised:
+                self.post(
+                    "/api/knowledge/commit",
+                    {
+                        "draft_id": "unknown-field",
+                        "selected_point_ids": ["anything"],
+                        "source_payload": {"filename": "safe.md", "text": "内容", "selected_points": []},
+                    },
+                )
+            self.assertEqual(raised.exception.code, 400)
+            error = json.loads(raised.exception.read().decode("utf-8"))
+            self.assertEqual(error["error"]["code"], "invalid_source_payload")
+
+            with self.assertRaises(HTTPError) as raised:
+                self.post(
+                    "/api/knowledge/commit",
+                    {
+                        "draft_id": "large-source",
+                        "selected_point_ids": ["anything"],
+                        "source_payload": {"filename": "large.md", "text": "x" * (4 * 1024 * 1024)},
+                    },
+                )
+            self.assertEqual(raised.exception.code, 413)
+            error = json.loads(raised.exception.read().decode("utf-8"))
+            self.assertEqual(error["error"]["code"], "source_payload_too_large")
+
     def test_knowledge_commit_requires_a_selected_point_and_cancel_is_side_effect_free(self):
         with TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)

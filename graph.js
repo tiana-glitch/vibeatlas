@@ -1410,7 +1410,11 @@
     }
     const review = normalizeReviewPayload(payload, file);
     if (!review.id) throw new Error("预览服务未返回预览编号，请稍后重试");
-    state.review = review;
+    // A Vercel container may route the follow-up commit to another
+    // short-lived instance. Keep the original, already validated upload in
+    // browser state so the server can deterministically rebuild a missing
+    // review draft instead of trusting client-supplied candidate text.
+    state.review = { ...review, sourcePayload: body };
     renderReview();
     setIngestStatus("review", "等待审核", `${review.points.length} 个候选知识点`, "list-checks");
   }
@@ -1440,6 +1444,7 @@
           source_filename: review.filename,
           source_keywords: review.keywords,
           selected_points: selected,
+          source_payload: review.sourcePayload,
         }),
       });
       const payload = await responsePayload(response);
