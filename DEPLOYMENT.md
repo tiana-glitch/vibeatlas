@@ -46,6 +46,16 @@ python3 server.py --host 0.0.0.0 --port $PORT --vault-root demo_vault
    https://<deployment>.vercel.app/api/health
    ```
 
+当前公开演示地址：
+`https://vibeatlas-eosin.vercel.app`
+
+对应入口：
+
+- 工作台：`https://vibeatlas-eosin.vercel.app/`
+- 知识图谱：`https://vibeatlas-eosin.vercel.app/graph.html`
+- 收件箱：`https://vibeatlas-eosin.vercel.app/inbox.html`
+- 健康检查：`https://vibeatlas-eosin.vercel.app/api/health`
+
 如果要绑定自己的域名，在 **Project -> Settings -> Domains** 添加域名，并按
 Vercel 页面显示的 A/CNAME 记录修改阿里云 DNS；不要凭记忆填写记录值。域名解析
 生效后，以上路径会自动使用自定义域名。Vercel Hobby 计划通常可用于小流量演示，
