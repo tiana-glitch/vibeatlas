@@ -13,6 +13,7 @@ import json
 import os
 import re
 import shutil
+import socket
 import subprocess
 import tempfile
 import threading
@@ -49,6 +50,13 @@ MAX_VAULT_SEARCH_QUERY_CHARS = 200
 MAX_VAULT_SEARCH_RESULTS = 200
 MAX_VAULT_NOTE_CONTENT_CHARS = 100_000
 VAULT_SEARCH_SNIPPET_CHARS = 240
+# A custom-container proxy can forward a request body without preserving
+# Content-Length or Transfer-Encoding.  In that case the body is delimited by
+# connection close (or by a short idle period); keep the idle wait bounded so
+# a malformed client cannot hold a worker forever.
+UNKNOWN_LENGTH_BODY_IDLE_TIMEOUT = 1.0
+REQUEST_BODY_READ_CHUNK_BYTES = 64 * 1024
+CHUNK_LINE_MAX_BYTES = 8 * 1024
 SEARCH_EXCLUDED_BASENAMES = {
     "readme.md",
     "00-知识库说明.md",
@@ -3019,20 +3027,9 @@ def make_handler(
             self._send_json(HTTPStatus.OK, result)
 
         def _read_json(self, allow_empty: bool = False, max_bytes: int = MAX_BODY_BYTES) -> Dict[str, Any]:
-            raw_length = self.headers.get("Content-Length")
-            if raw_length is None:
-                if allow_empty:
-                    return {}
-                raise RequestError(HTTPStatus.LENGTH_REQUIRED, "length_required", "Content-Length is required")
-            try:
-                length = int(raw_length)
-            except ValueError as exc:
-                raise RequestError(HTTPStatus.BAD_REQUEST, "invalid_length", "Invalid Content-Length") from exc
-            if length < 0 or length > max_bytes:
-                raise RequestError(HTTPStatus.REQUEST_ENTITY_TOO_LARGE, "body_too_large", "JSON body is too large")
-            if length == 0 and allow_empty:
+            raw = self._read_request_body(allow_empty=allow_empty, max_bytes=max_bytes)
+            if not raw and allow_empty:
                 return {}
-            raw = self.rfile.read(length)
             try:
                 value = json.loads(raw.decode("utf-8"))
             except (UnicodeDecodeError, json.JSONDecodeError) as exc:
@@ -3040,6 +3037,138 @@ def make_handler(
             if not isinstance(value, dict):
                 raise RequestError(HTTPStatus.BAD_REQUEST, "invalid_json", "JSON body must be an object")
             return value
+
+        def _read_request_body(self, allow_empty: bool, max_bytes: int) -> bytes:
+            """Read a request body while tolerating Vercel's framing proxy.
+
+            Normal clients send ``Content-Length``.  HTTP/1.1 clients may use
+            chunked transfer encoding, which ``BaseHTTPRequestHandler`` does
+            not decode for us.  Vercel custom-container forwarding can expose
+            neither header to the application; those requests are read until
+            the proxy closes the stream or goes idle.  The latter path is
+            bounded and closes the connection after one request.
+            """
+
+            transfer_encoding = self.headers.get("Transfer-Encoding", "")
+            if transfer_encoding:
+                codings = [part.strip().casefold() for part in transfer_encoding.split(",") if part.strip()]
+                if codings != ["chunked"]:
+                    raise RequestError(
+                        HTTPStatus.NOT_IMPLEMENTED,
+                        "unsupported_transfer_encoding",
+                        "Only chunked transfer encoding is supported",
+                    )
+                return self._read_chunked_body(max_bytes)
+
+            raw_length = self.headers.get("Content-Length")
+            if raw_length is not None:
+                try:
+                    length = int(raw_length)
+                except (TypeError, ValueError) as exc:
+                    raise RequestError(HTTPStatus.BAD_REQUEST, "invalid_length", "Invalid Content-Length") from exc
+                if length < 0 or length > max_bytes:
+                    raise RequestError(HTTPStatus.REQUEST_ENTITY_TOO_LARGE, "body_too_large", "JSON body is too large")
+                if length == 0:
+                    return b""
+                raw = self._read_exact_body(length)
+                if len(raw) != length:
+                    raise RequestError(HTTPStatus.BAD_REQUEST, "incomplete_body", "Request body ended before Content-Length")
+                return raw
+
+            # Vercel's custom-container proxy currently strips request framing
+            # headers before forwarding to a plain HTTP server.  A missing
+            # length is still rejected when no bytes arrive, preserving the
+            # historical 411 response for an actually empty request.
+            self.close_connection = True
+            raw = self._read_close_delimited_body(max_bytes)
+            if not raw and not allow_empty:
+                raise RequestError(HTTPStatus.LENGTH_REQUIRED, "length_required", "Content-Length is required")
+            return raw
+
+        def _read_exact_body(self, length: int) -> bytes:
+            chunks: List[bytes] = []
+            remaining = length
+            while remaining:
+                chunk = self.rfile.read(min(remaining, REQUEST_BODY_READ_CHUNK_BYTES))
+                if not chunk:
+                    break
+                chunks.append(chunk)
+                remaining -= len(chunk)
+            return b"".join(chunks)
+
+        def _read_close_delimited_body(self, max_bytes: int) -> bytes:
+            """Read an unframed body until EOF or a bounded idle timeout."""
+
+            chunks: List[bytes] = []
+            total = 0
+            connection = getattr(self, "connection", None)
+            previous_timeout: Optional[float] = None
+            timeout_changed = False
+            if connection is not None:
+                try:
+                    previous_timeout = connection.gettimeout()
+                    connection.settimeout(UNKNOWN_LENGTH_BODY_IDLE_TIMEOUT)
+                    timeout_changed = True
+                except (AttributeError, OSError):
+                    connection = None
+            try:
+                while total <= max_bytes:
+                    try:
+                        # ``read1`` returns bytes already available from the
+                        # buffered socket without waiting for a full chunk.
+                        reader = getattr(self.rfile, "read1", self.rfile.read)
+                        chunk = reader(min(REQUEST_BODY_READ_CHUNK_BYTES, max_bytes - total + 1))
+                    except socket.timeout:
+                        break
+                    except (ConnectionError, OSError):
+                        break
+                    if not chunk:
+                        break
+                    total += len(chunk)
+                    if total > max_bytes:
+                        raise RequestError(HTTPStatus.REQUEST_ENTITY_TOO_LARGE, "body_too_large", "JSON body is too large")
+                    chunks.append(chunk)
+            finally:
+                if timeout_changed and connection is not None:
+                    try:
+                        connection.settimeout(previous_timeout)
+                    except OSError:
+                        pass
+            return b"".join(chunks)
+
+        def _read_chunked_body(self, max_bytes: int) -> bytes:
+            """Decode an HTTP/1.1 chunked request body with a byte limit."""
+
+            chunks: List[bytes] = []
+            total = 0
+            while True:
+                line = self.rfile.readline(CHUNK_LINE_MAX_BYTES + 1)
+                if not line or len(line) > CHUNK_LINE_MAX_BYTES or not line.endswith(b"\r\n"):
+                    raise RequestError(HTTPStatus.BAD_REQUEST, "invalid_chunked_body", "Invalid chunk framing")
+                size_token = line[:-2].split(b";", 1)[0].strip()
+                try:
+                    size = int(size_token, 16)
+                except (TypeError, ValueError) as exc:
+                    raise RequestError(HTTPStatus.BAD_REQUEST, "invalid_chunked_body", "Invalid chunk size") from exc
+                if size < 0:
+                    raise RequestError(HTTPStatus.BAD_REQUEST, "invalid_chunked_body", "Invalid chunk size")
+                if size == 0:
+                    # Consume optional trailer fields through the terminating
+                    # empty line.  Trailer values are not used by the API.
+                    while True:
+                        trailer = self.rfile.readline(CHUNK_LINE_MAX_BYTES + 1)
+                        if not trailer or len(trailer) > CHUNK_LINE_MAX_BYTES:
+                            raise RequestError(HTTPStatus.BAD_REQUEST, "invalid_chunked_body", "Invalid chunk trailers")
+                        if trailer == b"\r\n":
+                            return b"".join(chunks)
+
+                if size > max_bytes - total:
+                    raise RequestError(HTTPStatus.REQUEST_ENTITY_TOO_LARGE, "body_too_large", "JSON body is too large")
+                chunk = self._read_exact_body(size)
+                if len(chunk) != size or self.rfile.read(2) != b"\r\n":
+                    raise RequestError(HTTPStatus.BAD_REQUEST, "invalid_chunked_body", "Invalid chunk framing")
+                chunks.append(chunk)
+                total += size
 
         def _send_json(self, status: HTTPStatus, value: Dict[str, Any]) -> None:
             body = json.dumps(value, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
